@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 public class UserRegisterTest {
     UserOperations userOperations;
+    ValidatableResponse validatableResponse;
 
     @Before
     public void setUp() {
@@ -20,7 +21,10 @@ public class UserRegisterTest {
 
     @After
     public void tearDown() {
-       userOperations.deleteUserAndFlushToken();
+        if (validatableResponse != null) {
+            userOperations.saveUserToken(validatableResponse);
+        }
+        userOperations.deleteUserAndFlushToken();
     }
 
     @Test
@@ -28,14 +32,12 @@ public class UserRegisterTest {
     @Description("Checking if \"success\" field has flag \"true\" in the response and status code is 200")
     public void testRegisterNewUserReturn200True() {
         RegisterUserRequest registerUserRequest = RegisterUserRequest.getRandom();
-        ValidatableResponse validatableResponse = userOperations.registerNewUserAndReturnResponse(registerUserRequest);
+        validatableResponse = userOperations.registerNewUserAndReturnResponse(registerUserRequest);
 
         validatableResponse
                 .assertThat().body("success", equalTo(true))
                 .and()
                 .statusCode(200);
-
-        userOperations.saveUserToken(validatableResponse);
     }
 
     @Test
@@ -43,14 +45,12 @@ public class UserRegisterTest {
     @Description("Checking if \"success\" field has flag \"false\" in the response and status code is 403")
     public void testRegisterExistingUserReturn403() {
         RegisterUserRequest registerUserRequest = RegisterUserRequest.getRandom();
-        ValidatableResponse validatableResponse = userOperations.registerNewUserAndReturnResponse(registerUserRequest);
+        validatableResponse = userOperations.registerNewUserAndReturnResponse(registerUserRequest);
         userOperations.registerNewUserAndReturnResponse(registerUserRequest)
                 .assertThat().body("success", equalTo(false),
                         "message", equalTo("User already exists"))
                 .and()
                 .statusCode(403);
-
-        userOperations.saveUserToken(validatableResponse);
     }
 
     @Test
